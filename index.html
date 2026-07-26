@@ -123,7 +123,7 @@
       </div>
     </div>
 
-    <!-- Entry Modal / Shift Selector (Simple Inline Input) -->
+    <!-- Entry Modal / Shift Selector -->
     <div id="shiftLoggerBox" class="bg-white p-5 rounded-2xl shadow-md border border-slate-200 hidden">
       <div class="flex justify-between items-center mb-3">
         <h3 id="selectedDateTitle" class="font-bold text-slate-800">Select Shift</h3>
@@ -148,6 +148,17 @@
     let currentDisplayYear = today.getFullYear();
     let selectedDateStr = null;
 
+    // Shift Pay Rates (You can adjust these specific values if needed)
+    const SHIFT_RATES = {
+      'DS': 180.00, // Day Shift Rate
+      'WN': 210.00, // Night Shift Rate
+      'SO': 150.00, // Sleepover Rate
+      'TR': 120.00  // Training Rate
+    };
+
+    // Estimated Net Pay Ratio (~80% after tax/deductions)
+    const NET_PAY_RATIO = 0.80;
+
     // Load logged shifts from LocalStorage
     const STORAGE_KEY = 'orchard_roster_data';
     let loggedShifts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
@@ -156,6 +167,7 @@
       document.getElementById('monthSelect').value = currentDisplayMonth;
       document.getElementById('yearSelect').value = currentDisplayYear;
       renderCalendar();
+      calculatePay();
     }
 
     function changeCalendarView() {
@@ -179,18 +191,15 @@
       const firstDay = new Date(currentDisplayYear, currentDisplayMonth, 1);
       const lastDay = new Date(currentDisplayYear, currentDisplayMonth + 1, 0);
 
-      // Adjust Monday index start (0 = Mon, 6 = Sun)
       let startingDay = firstDay.getDay() - 1;
       if (startingDay === -1) startingDay = 6;
 
-      // Blank slots before 1st of month
       for (let i = 0; i < startingDay; i++) {
         const emptyCell = document.createElement('div');
         emptyCell.className = "h-10";
         container.appendChild(emptyCell);
       }
 
-      // Render days
       for (let day = 1; day <= lastDay.getDate(); day++) {
         const dateString = `${currentDisplayYear}-${String(currentDisplayMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const dayCell = document.createElement('div');
@@ -242,7 +251,40 @@
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(loggedShifts));
       renderCalendar();
+      calculatePay();
       closeLogger();
+    }
+
+    // Calculation Engine
+    function calculatePay() {
+      let period1Gross = 0;
+      let period2Gross = 0;
+
+      // Define Pay Period Ranges
+      const p1Start = new Date('2026-07-13T00:00:00');
+      const p1End   = new Date('2026-07-26T23:59:59');
+
+      const p2Start = new Date('2026-07-27T00:00:00');
+      const p2End   = new Date('2026-08-09T23:59:59');
+
+      Object.keys(loggedShifts).forEach(dateStr => {
+        const shiftType = loggedShifts[dateStr];
+        const rate = SHIFT_RATES[shiftType] || 0;
+        const shiftDate = new Date(`${dateStr}T00:00:00`);
+
+        if (shiftDate >= p1Start && shiftDate <= p1End) {
+          period1Gross += rate;
+        } else if (shiftDate >= p2Start && shiftDate <= p2End) {
+          period2Gross += rate;
+        }
+      });
+
+      // Update UI elements
+      document.getElementById('nextPaydayGross').innerText = `€${period1Gross.toFixed(2)}`;
+      document.getElementById('nextPaydayNet').innerText = `€${(period1Gross * NET_PAY_RATIO).toFixed(2)}`;
+
+      document.getElementById('followingPaydayGross').innerText = `€${period2Gross.toFixed(2)}`;
+      document.getElementById('followingPaydayNet').innerText = `€${(period2Gross * NET_PAY_RATIO).toFixed(2)}`;
     }
 
     // Startup Initialization
