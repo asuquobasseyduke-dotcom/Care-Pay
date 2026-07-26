@@ -5,30 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Care Roster & Pay Calculator</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            orchardPurple: '#4B2A68',
-            orchardDark: '#2D193F',
-            orchardCard: '#3B2153',
-            orchardNavy: '#1E2538',
-            orchardTeal: '#00A699',
-            colorDS: '#2563EB',
-            colorWN: '#0D9488',
-            colorSO: '#7C3AED',
-            colorTr: '#EA580C'
-          }
-        }
-      }
-    }
-  </script>
 </head>
 <body class="bg-slate-100 font-sans min-h-screen pb-12">
 
   <!-- Header -->
-  <header class="bg-orchardPurple text-white py-6 px-4 text-center shadow-md">
+  <header class="bg-[#4B2A68] text-white py-6 px-4 text-center shadow-md">
     <h1 class="text-2xl font-bold tracking-tight">Personal Roster Calculator</h1>
     <p class="text-xs text-purple-200 mt-1">Private Financial Estimation Tool</p>
   </header>
@@ -36,13 +17,11 @@
   <main class="max-w-xl mx-auto px-4 mt-6 space-y-6">
 
     <!-- Payday Card 1 -->
-    <div class="bg-orchardPurple text-white p-5 rounded-2xl shadow-lg border border-purple-900/30">
+    <div class="bg-[#4B2A68] text-white p-5 rounded-2xl shadow-lg">
       <p class="text-xs uppercase tracking-wider text-purple-200 font-semibold">Next Immediate Payday</p>
-      <p id="nextPaydayDate" class="text-xl font-bold mt-1">Thursday 6 August 2026</p>
-      <p id="nextPaydayPeriod" class="text-xs text-purple-300 mt-0.5">Period: 13 Jul to 26 Jul</p>
-      
+      <p class="text-xl font-bold mt-1">Thursday 6 August 2026</p>
+      <p class="text-xs text-purple-300 mt-0.5">Period: 13 Jul to 26 Jul</p>
       <div class="border-t border-purple-400/20 my-3"></div>
-      
       <div class="flex justify-between items-center text-sm">
         <div>
           <span class="text-xs text-purple-300 block">Gross Estimate</span>
@@ -56,13 +35,11 @@
     </div>
 
     <!-- Payday Card 2 -->
-    <div class="bg-orchardNavy text-white p-5 rounded-2xl shadow-lg border border-slate-800">
+    <div class="bg-[#1E2538] text-white p-5 rounded-2xl shadow-lg">
       <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Following Payday</p>
-      <p id="followingPaydayDate" class="text-xl font-bold mt-1">Thursday 20 August 2026</p>
-      <p id="followingPaydayPeriod" class="text-xs text-slate-400 mt-0.5">Period: 27 Jul to 9 Aug</p>
-      
+      <p class="text-xl font-bold mt-1">Thursday 20 August 2026</p>
+      <p class="text-xs text-slate-400 mt-0.5">Period: 27 Jul to 9 Aug</p>
       <div class="border-t border-slate-700/50 my-3"></div>
-      
       <div class="flex justify-between items-center text-sm">
         <div>
           <span class="text-xs text-slate-400 block">Gross Estimate</span>
@@ -75,15 +52,23 @@
       </div>
     </div>
 
+    <!-- Quick Shift Logger Bar -->
+    <div id="loggerBar" class="bg-white p-4 rounded-2xl shadow-md border border-slate-200 hidden">
+      <p id="selectedDateTitle" class="font-bold text-slate-800 text-sm mb-2">Select Shift</p>
+      <div class="grid grid-cols-5 gap-1">
+        <button onclick="setShift('DS')" class="bg-blue-600 text-white py-2 rounded-lg text-xs font-bold">DS</button>
+        <button onclick="setShift('WN')" class="bg-teal-600 text-white py-2 rounded-lg text-xs font-bold">WN</button>
+        <button onclick="setShift('SO')" class="bg-purple-600 text-white py-2 rounded-lg text-xs font-bold">SO</button>
+        <button onclick="setShift('TR')" class="bg-orange-600 text-white py-2 rounded-lg text-xs font-bold">TR</button>
+        <button onclick="setShift(null)" class="bg-slate-200 text-red-600 py-2 rounded-lg text-xs font-bold">Clear</button>
+      </div>
+    </div>
+
     <!-- Calendar Section -->
     <div class="bg-white p-5 rounded-2xl shadow-md border border-slate-200">
-      
-      <!-- Month/Year Selection & Header Controls -->
-      <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
-        
-        <!-- Dropdown selectors for 12 months & years -->
+      <div class="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
         <div class="flex items-center gap-2">
-          <select id="monthSelect" onchange="changeCalendarView()" class="bg-slate-100 font-bold text-slate-800 text-sm py-1.5 px-2.5 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-purple-600">
+          <select id="monthSelect" onchange="changeCalendarView()" class="bg-slate-100 font-bold text-slate-800 text-sm py-1 px-2 rounded-lg border border-slate-300">
             <option value="0">January</option>
             <option value="1">February</option>
             <option value="2">March</option>
@@ -97,52 +82,23 @@
             <option value="10">November</option>
             <option value="11">December</option>
           </select>
-
-          <select id="yearSelect" onchange="changeCalendarView()" class="bg-slate-100 font-bold text-slate-800 text-sm py-1.5 px-2.5 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-purple-600">
+          <select id="yearSelect" onchange="changeCalendarView()" class="bg-slate-100 font-bold text-slate-800 text-sm py-1 px-2 rounded-lg border border-slate-300">
             <option value="2025">2025</option>
             <option value="2026">2026</option>
             <option value="2027">2027</option>
-            <option value="2028">2028</option>
           </select>
         </div>
-
-        <!-- Jump to Today Button -->
-        <button onclick="jumpToCurrentMonth()" class="text-xs font-semibold bg-purple-50 text-purple-700 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition">
-          Today
-        </button>
+        <button onclick="jumpToCurrentMonth()" class="text-xs font-semibold bg-purple-50 text-purple-700 px-3 py-1.5 rounded-lg">Today</button>
       </div>
 
-      <!-- Days of Week Header -->
       <div class="grid grid-cols-7 text-center text-xs font-bold text-slate-400 mb-2">
         <div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div>
       </div>
 
-      <!-- Calendar Days Grid -->
-      <div id="calendarDays" class="grid grid-cols-7 gap-1.5 text-center text-sm font-medium">
-        <!-- Rendered via Javascript -->
-      </div>
+      <div id="calendarDays" class="grid grid-cols-7 gap-1.5 text-center text-sm font-medium"></div>
     </div>
 
   </main>
-
-  <!-- Popup Modal Selector -->
-  <div id="modalOverlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white w-full max-w-xs p-5 rounded-2xl shadow-xl border border-slate-200">
-      <div class="flex justify-between items-center mb-4">
-        <h3 id="selectedDateTitle" class="font-bold text-slate-800 text-base">Select Shift</h3>
-        <button onclick="closeLogger()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded-md font-semibold">✕</button>
-      </div>
-
-      <div class="grid grid-cols-2 gap-2.5 mb-4">
-        <button onclick="setShiftForSelectedDate('DS')" class="bg-blue-600 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-blue-700 shadow-sm active:scale-95 transition">Day Shift (DS)</button>
-        <button onclick="setShiftForSelectedDate('WN')" class="bg-teal-600 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-teal-700 shadow-sm active:scale-95 transition">Night Shift (WN)</button>
-        <button onclick="setShiftForSelectedDate('SO')" class="bg-purple-600 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-purple-700 shadow-sm active:scale-95 transition">Sleepover (SO)</button>
-        <button onclick="setShiftForSelectedDate('TR')" class="bg-orange-600 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-orange-700 shadow-sm active:scale-95 transition">Training (TR)</button>
-      </div>
-      
-      <button onclick="setShiftForSelectedDate(null)" class="w-full bg-slate-100 text-red-600 py-2.5 rounded-xl text-xs font-semibold hover:bg-slate-200 active:scale-95 transition">Clear Shift</button>
-    </div>
-  </div>
 
   <script>
     const today = new Date();
@@ -150,14 +106,7 @@
     let currentDisplayYear = today.getFullYear();
     let selectedDateStr = null;
 
-    // Shift Pay Rates
-    const SHIFT_RATES = {
-      'DS': 180.00,
-      'WN': 210.00,
-      'SO': 150.00,
-      'TR': 120.00
-    };
-
+    const SHIFT_RATES = { 'DS': 180.00, 'WN': 210.00, 'SO': 150.00, 'TR': 120.00 };
     const NET_PAY_RATIO = 0.80;
 
     const STORAGE_KEY = 'orchard_roster_data';
@@ -205,18 +154,16 @@
         const dayCell = document.createElement('div');
         
         const isToday = day === today.getDate() && currentDisplayMonth === today.getMonth() && currentDisplayYear === today.getFullYear();
-        
         let cellClasses = "h-10 rounded-xl flex flex-col items-center justify-center cursor-pointer border transition text-xs relative ";
         
         if (isToday) {
           cellClasses += "border-purple-600 bg-purple-50 font-bold text-purple-900 ";
         } else {
-          cellClasses += "border-slate-100 bg-slate-50 text-slate-700 hover:bg-slate-100 ";
+          cellClasses += "border-slate-100 bg-slate-50 text-slate-700 ";
         }
 
         const shift = loggedShifts[dateString];
         let shiftBadge = '';
-        
         if (shift === 'DS') shiftBadge = '<span class="text-[9px] font-bold text-blue-600">DS</span>';
         if (shift === 'WN') shiftBadge = '<span class="text-[9px] font-bold text-teal-600">WN</span>';
         if (shift === 'SO') shiftBadge = '<span class="text-[9px] font-bold text-purple-600">SO</span>';
@@ -224,35 +171,30 @@
 
         dayCell.className = cellClasses;
         dayCell.innerHTML = `<span>${day}</span>${shiftBadge}`;
-        dayCell.onclick = () => openLogger(dateString);
+        dayCell.setAttribute('onclick', `selectDate('${dateString}')`);
 
         container.appendChild(dayCell);
       }
     }
 
-    function openLogger(dateStr) {
+    function selectDate(dateStr) {
       selectedDateStr = dateStr;
-      document.getElementById('selectedDateTitle').innerText = `Shift for ${dateStr}`;
-      document.getElementById('modalOverlay').classList.remove('hidden');
+      document.getElementById('selectedDateTitle').innerText = `Select shift for ${dateStr}:`;
+      document.getElementById('loggerBar').classList.remove('hidden');
+      window.scrollTo({ top: 150, behavior: 'smooth' });
     }
 
-    function closeLogger() {
-      document.getElementById('modalOverlay').classList.add('hidden');
-    }
-
-    function setShiftForSelectedDate(shiftType) {
+    function setShift(shiftType) {
       if (!selectedDateStr) return;
-      
       if (shiftType) {
         loggedShifts[selectedDateStr] = shiftType;
       } else {
         delete loggedShifts[selectedDateStr];
       }
-
       localStorage.setItem(STORAGE_KEY, JSON.stringify(loggedShifts));
       renderCalendar();
       calculatePay();
-      closeLogger();
+      document.getElementById('loggerBar').classList.add('hidden');
     }
 
     function calculatePay() {
