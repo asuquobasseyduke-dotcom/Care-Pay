@@ -123,24 +123,26 @@
       </div>
     </div>
 
-    <!-- Entry Modal / Shift Selector -->
-    <div id="shiftLoggerBox" class="bg-white p-5 rounded-2xl shadow-md border border-slate-200 hidden">
-      <div class="flex justify-between items-center mb-3">
-        <h3 id="selectedDateTitle" class="font-bold text-slate-800">Select Shift</h3>
-        <button onclick="closeLogger()" class="text-xs text-slate-400 hover:text-slate-600">Close</button>
+  </main>
+
+  <!-- Popup Modal Selector -->
+  <div id="modalOverlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-xs p-5 rounded-2xl shadow-xl border border-slate-200">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="selectedDateTitle" class="font-bold text-slate-800 text-base">Select Shift</h3>
+        <button onclick="closeLogger()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded-md font-semibold">✕</button>
       </div>
 
-      <div class="grid grid-cols-2 gap-2 mb-3">
-        <button onclick="setShiftForSelectedDate('DS')" class="bg-blue-600 text-white py-2 rounded-lg text-xs font-bold hover:opacity-90">Day Shift (DS)</button>
-        <button onclick="setShiftForSelectedDate('WN')" class="bg-teal-600 text-white py-2 rounded-lg text-xs font-bold hover:opacity-90">Night Shift (WN)</button>
-        <button onclick="setShiftForSelectedDate('SO')" class="bg-purple-600 text-white py-2 rounded-lg text-xs font-bold hover:opacity-90">Sleepover (SO)</button>
-        <button onclick="setShiftForSelectedDate('TR')" class="bg-orange-600 text-white py-2 rounded-lg text-xs font-bold hover:opacity-90">Training (TR)</button>
+      <div class="grid grid-cols-2 gap-2.5 mb-4">
+        <button onclick="setShiftForSelectedDate('DS')" class="bg-blue-600 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-blue-700 shadow-sm active:scale-95 transition">Day Shift (DS)</button>
+        <button onclick="setShiftForSelectedDate('WN')" class="bg-teal-600 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-teal-700 shadow-sm active:scale-95 transition">Night Shift (WN)</button>
+        <button onclick="setShiftForSelectedDate('SO')" class="bg-purple-600 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-purple-700 shadow-sm active:scale-95 transition">Sleepover (SO)</button>
+        <button onclick="setShiftForSelectedDate('TR')" class="bg-orange-600 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-orange-700 shadow-sm active:scale-95 transition">Training (TR)</button>
       </div>
       
-      <button onclick="setShiftForSelectedDate(null)" class="w-full bg-slate-100 text-slate-600 py-2 rounded-lg text-xs font-semibold hover:bg-slate-200">Clear Shift</button>
+      <button onclick="setShiftForSelectedDate(null)" class="w-full bg-slate-100 text-red-600 py-2.5 rounded-xl text-xs font-semibold hover:bg-slate-200 active:scale-95 transition">Clear Shift</button>
     </div>
-
-  </main>
+  </div>
 
   <script>
     const today = new Date();
@@ -148,18 +150,16 @@
     let currentDisplayYear = today.getFullYear();
     let selectedDateStr = null;
 
-    // Shift Pay Rates (You can adjust these specific values if needed)
+    // Shift Pay Rates
     const SHIFT_RATES = {
-      'DS': 180.00, // Day Shift Rate
-      'WN': 210.00, // Night Shift Rate
-      'SO': 150.00, // Sleepover Rate
-      'TR': 120.00  // Training Rate
+      'DS': 180.00,
+      'WN': 210.00,
+      'SO': 150.00,
+      'TR': 120.00
     };
 
-    // Estimated Net Pay Ratio (~80% after tax/deductions)
     const NET_PAY_RATIO = 0.80;
 
-    // Load logged shifts from LocalStorage
     const STORAGE_KEY = 'orchard_roster_data';
     let loggedShifts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
 
@@ -233,11 +233,11 @@
     function openLogger(dateStr) {
       selectedDateStr = dateStr;
       document.getElementById('selectedDateTitle').innerText = `Shift for ${dateStr}`;
-      document.getElementById('shiftLoggerBox').classList.remove('hidden');
+      document.getElementById('modalOverlay').classList.remove('hidden');
     }
 
     function closeLogger() {
-      document.getElementById('shiftLoggerBox').classList.add('hidden');
+      document.getElementById('modalOverlay').classList.add('hidden');
     }
 
     function setShiftForSelectedDate(shiftType) {
@@ -255,12 +255,10 @@
       closeLogger();
     }
 
-    // Calculation Engine
     function calculatePay() {
       let period1Gross = 0;
       let period2Gross = 0;
 
-      // Define Pay Period Ranges
       const p1Start = new Date('2026-07-13T00:00:00');
       const p1End   = new Date('2026-07-26T23:59:59');
 
@@ -279,7 +277,6 @@
         }
       });
 
-      // Update UI elements
       document.getElementById('nextPaydayGross').innerText = `€${period1Gross.toFixed(2)}`;
       document.getElementById('nextPaydayNet').innerText = `€${(period1Gross * NET_PAY_RATIO).toFixed(2)}`;
 
@@ -287,7 +284,6 @@
       document.getElementById('followingPaydayNet').innerText = `€${(period2Gross * NET_PAY_RATIO).toFixed(2)}`;
     }
 
-    // Startup Initialization
     initCalendar();
   </script>
 </body>
