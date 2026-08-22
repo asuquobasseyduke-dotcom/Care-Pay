@@ -120,21 +120,20 @@
     const STORAGE_KEY = 'orchard_roster_data';
     let loggedShifts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
 
-    // Fixed Orchard Pay Period Anchor
+    // Fixed Orchard Pay Period Engine
     function getPayPeriods() {
-      // Known exact anchor: Payday 14 August 2026 -> Period: 13 July to 26 July 2026
-      const anchorPeriodStart = new Date(2026, 6, 13); // 13 July 2026
-      const anchorPayday = new Date(2026, 7, 14);       // 14 August 2026
+      // Known Anchor Payday: Thursday 20 August 2026 (Period: 27 Jul to 9 Aug 2026)
+      const anchorPeriodStart = new Date(2026, 6, 27); // 27 July 2026
+      const anchorPayday = new Date(2026, 7, 20);       // 20 August 2026
 
       const msPerDay = 24 * 60 * 60 * 1000;
       const todayZero = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-      // Find how many 14-day cycles have elapsed since the anchor payday
-      const daysDiff = Math.floor((todayZero - anchorPayday) / msPerDay);
-      let cyclesPassed = Math.floor(daysDiff / 14);
+      // Calculate 14-day cycles elapsed
+      let cyclesPassed = Math.floor((todayZero - anchorPayday) / (14 * msPerDay));
 
-      // Roll forward as soon as payday passes
-      if (daysDiff >= 0) {
+      // Advance to next active cycle once payday has passed
+      if (todayZero >= anchorPayday) {
         cyclesPassed += 1;
       }
 
