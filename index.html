@@ -19,8 +19,8 @@
     <!-- Payday Card 1 -->
     <div class="bg-[#4B2A68] text-white p-5 rounded-2xl shadow-lg">
       <p class="text-xs uppercase tracking-wider text-purple-200 font-semibold">Next Immediate Payday</p>
-      <p class="text-xl font-bold mt-1">Thursday 6 August 2026</p>
-      <p class="text-xs text-purple-300 mt-0.5">Period: 13 Jul to 26 Jul</p>
+      <p id="nextPaydayDate" class="text-xl font-bold mt-1">Calculating...</p>
+      <p id="nextPaydayPeriod" class="text-xs text-purple-300 mt-0.5">Period: --</p>
       <div class="border-t border-purple-400/20 my-3"></div>
       <div class="flex justify-between items-center text-sm">
         <div>
@@ -37,8 +37,8 @@
     <!-- Payday Card 2 -->
     <div class="bg-[#1E2538] text-white p-5 rounded-2xl shadow-lg">
       <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Following Payday</p>
-      <p class="text-xl font-bold mt-1">Thursday 20 August 2026</p>
-      <p class="text-xs text-slate-400 mt-0.5">Period: 27 Jul to 9 Aug</p>
+      <p id="followingPaydayDate" class="text-xl font-bold mt-1">Calculating...</p>
+      <p id="followingPaydayPeriod" class="text-xs text-slate-400 mt-0.5">Period: --</p>
       <div class="border-t border-slate-700/50 my-3"></div>
       <div class="flex justify-between items-center text-sm">
         <div>
@@ -86,6 +86,7 @@
             <option value="2025">2025</option>
             <option value="2026">2026</option>
             <option value="2027">2027</option>
+            <option value="2028">2028</option>
           </select>
         </div>
         <button onclick="jumpToCurrentMonth()" class="text-xs font-semibold bg-purple-50 text-purple-700 px-3 py-1.5 rounded-lg">Today</button>
@@ -111,6 +112,51 @@
 
     const STORAGE_KEY = 'orchard_roster_data';
     let loggedShifts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+
+    // Dynamic Pay Period Rollover Engine
+    function getPayPeriods() {
+      // Known reference anchor payday: Thursday 22 Jan 2026 (Period: 29 Dec 2025 - 11 Jan 2026)
+      const anchorPeriodStart = new Date(2025, 11, 29); // 29 Dec 2025
+      const anchorPayday = new Date(2026, 0, 22);       // 22 Jan 2026
+
+      const msPerDay = 24 * 60 * 60 * 1000;
+      const todayZero = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+      // Days since reference payday
+      const daysDiff = Math.floor((todayZero - anchorPayday) / msPerDay);
+      let cyclesPassed = Math.floor(daysDiff / 14);
+
+      // Advance to next active cycle if today has passed or reached payday
+      if (daysDiff >= 0) {
+        cyclesPassed += 1;
+      }
+
+      // Next Payday (Period 1)
+      const p1Payday = new Date(anchorPayday.getTime() + cyclesPassed * 14 * msPerDay);
+      const p1Start = new Date(anchorPeriodStart.getTime() + cyclesPassed * 14 * msPerDay);
+      const p1End = new Date(p1Start.getTime() + 13 * msPerDay);
+
+      // Following Payday (Period 2)
+      const p2Payday = new Date(p1Payday.getTime() + 14 * msPerDay);
+      const p2Start = new Date(p1Start.getTime() + 14 * msPerDay);
+      const p2End = new Date(p2Start.getTime() + 13 * msPerDay);
+
+      return {
+        p1: { start: p1Start, end: p1End, payday: p1Payday },
+        p2: { start: p2Start, end: p2End, payday: p2Payday }
+      };
+    }
+
+    function formatDate(d) {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return `${d.getDate()} ${months[d.getMonth()]}`;
+    }
+
+    function formatPayday(d) {
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+    }
 
     function initCalendar() {
       document.getElementById('monthSelect').value = currentDisplayMonth;
@@ -181,7 +227,6 @@
       selectedDateStr = dateStr;
       document.getElementById('selectedDateTitle').innerText = `Select shift for ${dateStr}:`;
       document.getElementById('loggerBar').classList.remove('hidden');
-      window.scrollTo({ top: 150, behavior: 'smooth' });
     }
 
     function setShift(shiftType) {
@@ -198,32 +243,37 @@
     }
 
     function calculatePay() {
-      let period1Gross = 0;
-      let period2Gross = 0;
+      const periods = getPayPeriods();
 
-      const p1Start = new Date('2026-07-13T00:00:00');
-      const p1End   = new Date('2026-07-26T23:59:59');
+      // Set Card Headers Dynamically
+      document.getElementById('nextPaydayDate').innerText = formatPayday(periods.p1.payday);
+      document.getElementById('nextPaydayPeriod').innerText = `Period: ${formatDate(periods.p1.start)} to ${formatDate(periods.p1.end)}`;
 
-      const p2Start = new Date('2026-07-27T00:00:00');
-      const p2End   = new Date('2026-08-09T23:59:59');
+      document.getElementById('followingPaydayDate').innerText = formatPayday(periods.p2.payday);
+      document.getElementById('followingPaydayPeriod').innerText = `Period: ${formatDate(periods.p2.start)} to ${formatDate(periods.p2.end)}`;
+
+      let p1Gross = 0, p2Gross = 0;
 
       Object.keys(loggedShifts).forEach(dateStr => {
         const shiftType = loggedShifts[dateStr];
         const rate = SHIFT_RATES[shiftType] || 0;
-        const shiftDate = new Date(`${dateStr}T00:00:00`);
+        
+        // Fix Date parsing to avoid timezone offset errors
+        const parts = dateStr.split('-');
+        const shiftDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
 
-        if (shiftDate >= p1Start && shiftDate <= p1End) {
-          period1Gross += rate;
-        } else if (shiftDate >= p2Start && shiftDate <= p2End) {
-          period2Gross += rate;
+        if (shiftDate >= periods.p1.start && shiftDate <= periods.p1.end) {
+          p1Gross += rate;
+        } else if (shiftDate >= periods.p2.start && shiftDate <= periods.p2.end) {
+          p2Gross += rate;
         }
       });
 
-      document.getElementById('nextPaydayGross').innerText = `€${period1Gross.toFixed(2)}`;
-      document.getElementById('nextPaydayNet').innerText = `€${(period1Gross * NET_PAY_RATIO).toFixed(2)}`;
+      document.getElementById('nextPaydayGross').innerText = `€${p1Gross.toFixed(2)}`;
+      document.getElementById('nextPaydayNet').innerText = `€${(p1Gross * NET_PAY_RATIO).toFixed(2)}`;
 
-      document.getElementById('followingPaydayGross').innerText = `€${period2Gross.toFixed(2)}`;
-      document.getElementById('followingPaydayNet').innerText = `€${(period2Gross * NET_PAY_RATIO).toFixed(2)}`;
+      document.getElementById('followingPaydayGross').innerText = `€${p2Gross.toFixed(2)}`;
+      document.getElementById('followingPaydayNet').innerText = `€${(p2Gross * NET_PAY_RATIO).toFixed(2)}`;
     }
 
     initCalendar();
