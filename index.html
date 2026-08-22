@@ -107,7 +107,6 @@
     let currentDisplayYear = today.getFullYear();
     let selectedDateStr = null;
 
-    // Shift Pay Rates (Updated to match exact hourly rates)
     const SHIFT_RATES = { 
       'DS': 216.00, // Standard 12hr Day Shift (€18/hr)
       'WN': 230.00, // Night Shift
@@ -116,24 +115,25 @@
     };
 
     const SUNDAY_DAY_RATE = 324.00; // Sunday Premium Rate (12hrs x €27/hr)
-
-    // Accurate Net Pay Ratio (74.2% take-home after 25.8% tax/pension)
-    const NET_PAY_RATIO = 0.742;
+    const NET_PAY_RATIO = 0.742; // Net Take-Home (74.2%)
 
     const STORAGE_KEY = 'orchard_roster_data';
     let loggedShifts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
 
-    // Dynamic Pay Period Rollover Engine
+    // Fixed Orchard Pay Period Anchor
     function getPayPeriods() {
-      const anchorPeriodStart = new Date(2025, 11, 29); // 29 Dec 2025
-      const anchorPayday = new Date(2026, 0, 22);       // 22 Jan 2026
+      // Known exact anchor: Payday 14 August 2026 -> Period: 13 July to 26 July 2026
+      const anchorPeriodStart = new Date(2026, 6, 13); // 13 July 2026
+      const anchorPayday = new Date(2026, 7, 14);       // 14 August 2026
 
       const msPerDay = 24 * 60 * 60 * 1000;
       const todayZero = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
+      // Find how many 14-day cycles have elapsed since the anchor payday
       const daysDiff = Math.floor((todayZero - anchorPayday) / msPerDay);
       let cyclesPassed = Math.floor(daysDiff / 14);
 
+      // Roll forward as soon as payday passes
       if (daysDiff >= 0) {
         cyclesPassed += 1;
       }
