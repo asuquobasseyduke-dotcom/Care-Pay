@@ -107,36 +107,41 @@
     let currentDisplayYear = today.getFullYear();
     let selectedDateStr = null;
 
-    const SHIFT_RATES = { 'DS': 180.00, 'WN': 210.00, 'SO': 150.00, 'TR': 120.00 };
-    const NET_PAY_RATIO = 0.80;
+    // Shift Pay Rates (Updated to match exact hourly rates)
+    const SHIFT_RATES = { 
+      'DS': 216.00, // Standard 12hr Day Shift (€18/hr)
+      'WN': 230.00, // Night Shift
+      'SO': 150.00, // Sleepover Rate
+      'TR': 120.00  // Training Rate
+    };
+
+    const SUNDAY_DAY_RATE = 324.00; // Sunday Premium Rate (12hrs x €27/hr)
+
+    // Accurate Net Pay Ratio (74.2% take-home after 25.8% tax/pension)
+    const NET_PAY_RATIO = 0.742;
 
     const STORAGE_KEY = 'orchard_roster_data';
     let loggedShifts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
 
     // Dynamic Pay Period Rollover Engine
     function getPayPeriods() {
-      // Known reference anchor payday: Thursday 22 Jan 2026 (Period: 29 Dec 2025 - 11 Jan 2026)
       const anchorPeriodStart = new Date(2025, 11, 29); // 29 Dec 2025
       const anchorPayday = new Date(2026, 0, 22);       // 22 Jan 2026
 
       const msPerDay = 24 * 60 * 60 * 1000;
       const todayZero = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-      // Days since reference payday
       const daysDiff = Math.floor((todayZero - anchorPayday) / msPerDay);
       let cyclesPassed = Math.floor(daysDiff / 14);
 
-      // Advance to next active cycle if today has passed or reached payday
       if (daysDiff >= 0) {
         cyclesPassed += 1;
       }
 
-      // Next Payday (Period 1)
       const p1Payday = new Date(anchorPayday.getTime() + cyclesPassed * 14 * msPerDay);
       const p1Start = new Date(anchorPeriodStart.getTime() + cyclesPassed * 14 * msPerDay);
       const p1End = new Date(p1Start.getTime() + 13 * msPerDay);
 
-      // Following Payday (Period 2)
       const p2Payday = new Date(p1Payday.getTime() + 14 * msPerDay);
       const p2Start = new Date(p1Start.getTime() + 14 * msPerDay);
       const p2End = new Date(p2Start.getTime() + 13 * msPerDay);
@@ -245,7 +250,6 @@
     function calculatePay() {
       const periods = getPayPeriods();
 
-      // Set Card Headers Dynamically
       document.getElementById('nextPaydayDate').innerText = formatPayday(periods.p1.payday);
       document.getElementById('nextPaydayPeriod').innerText = `Period: ${formatDate(periods.p1.start)} to ${formatDate(periods.p1.end)}`;
 
@@ -256,11 +260,14 @@
 
       Object.keys(loggedShifts).forEach(dateStr => {
         const shiftType = loggedShifts[dateStr];
-        const rate = SHIFT_RATES[shiftType] || 0;
-        
-        // Fix Date parsing to avoid timezone offset errors
         const parts = dateStr.split('-');
         const shiftDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+
+        // Calculate rate based on shift type & Sunday premium
+        let rate = SHIFT_RATES[shiftType] || 0;
+        if (shiftType === 'DS' && shiftDate.getDay() === 0) {
+          rate = SUNDAY_DAY_RATE; // Apply €27/hr Sunday rate
+        }
 
         if (shiftDate >= periods.p1.start && shiftDate <= periods.p1.end) {
           p1Gross += rate;
